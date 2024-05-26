@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var insecure bool
-
 var manifestPushCmd = &cobra.Command{
 	Use:   "manifest:push",
 	Short: "Push docker manifest to a registry using oras",
@@ -44,15 +42,15 @@ func manifestPushCmdRun(cmd *cobra.Command, args []string) {
 	}
 
 	// push manifest using oras
-	var commandOrasPush strings.Builder
+	var orasPushManifestStrBuilder strings.Builder
 
-	commandOrasPush.WriteString("oras manifest push ")
+	orasPushManifestStrBuilder.WriteString("oras manifest push ")
 	if insecure {
-		commandOrasPush.WriteString("--plain-http ")
+		orasPushManifestStrBuilder.WriteString("--plain-http ")
 	}
-	commandOrasPush.WriteString(fmt.Sprintf("%s %s", dockerManifest, manifestPath))
+	orasPushManifestStrBuilder.WriteString(fmt.Sprintf("%s %s", dockerManifest, manifestPath))
 
-	orasPushManifestCmd := commandOrasPush.String()
+	orasPushManifestCmd := orasPushManifestStrBuilder.String()
 	logrus.Infof("pushing manifest: %s", orasPushManifestCmd)
 
 	if err = utils.RunCommand(orasPushManifestCmd); err != nil {

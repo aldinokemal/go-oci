@@ -26,6 +26,14 @@ go-oci image:push localhost:5000/go-whatsapp-web-multidevice:linux-arm64
 go-oci manifest:push localhost:5000/go-whatsapp-web-multidevice:latest --insecure
 ```
 
+
+### Command: Create Manifest and Push to Zot OCI Registry
+```bash
+go-oci manifest:create --insecure=true --push=true raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:latest \
+        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-amd64 \
+        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-arm64
+```
+
 ### Reference:
 ```bash
 docker buildx build \
