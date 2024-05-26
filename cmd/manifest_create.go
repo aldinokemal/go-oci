@@ -46,7 +46,7 @@ func manifestCreateCmdRun(cmd *cobra.Command, args []string) {
 		dockerManifestStrBuilder.WriteString(" ")
 	}
 
-	logrus.Infof("creating manifest: %s", dockerManifestStrBuilder.String())
+	logrus.Debugf("creating manifest: %s", dockerManifestStrBuilder.String())
 
 	if err := utils.RunCommand(dockerManifestStrBuilder.String()); err != nil {
 		logrus.Fatalf("failed to create manifest: %v", err)

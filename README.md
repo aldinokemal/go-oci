@@ -18,26 +18,30 @@ go install github.com/aldinokemal/go-oci@latest
 `go-oci image:push <image:tag>`
 
 ```bash
-go-oci image:push localhost:5000/go-whatsapp-web-multidevice:linux-arm64
+go-oci image:push localhost:5000/go-whatsapp-web-multidevice:linux-arm64 \
+        --insecure=true
 ```
 
 ### Command: Push Manifest from Local to Zot OCI Registry
 ```bash
-go-oci manifest:push localhost:5000/go-whatsapp-web-multidevice:latest --insecure
+go-oci manifest:push localhost:5000/go-whatsapp-web-multidevice:latest \
+        --insecure=true
 ```
 
 
 ### Command: Create Manifest and Push to Zot OCI Registry
 ```bash
-go-oci manifest:create --insecure=true --push=true raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:latest \
-        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-amd64 \
-        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-arm64
+go-oci manifest:create localhost:5000/go-whatsapp-web-multidevice:latest \
+        --amend localhost:5000/go-whatsapp-web-multidevice:linux-amd64 \
+        --amend localhost:5000/go-whatsapp-web-multidevice:linux-arm64 \
+        --insecure=true \
+        --push=true 
 ```
 
 ### Reference:
 ```bash
 docker buildx build \
-        --tag raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-amd64 \
+        --tag localhost:5000/go-whatsapp-web-multidevice:linux-amd64 \
         --platform linux/amd64 \
         --load \
         --progress plain \
@@ -45,7 +49,7 @@ docker buildx build \
         .
 
 docker buildx build \
-        --tag raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-arm64 \
+        --tag localhost:5000/go-whatsapp-web-multidevice:linux-arm64 \
         --platform linux/arm64 \
         --load \
         --progress plain \
@@ -53,8 +57,8 @@ docker buildx build \
         .
 
 
-docker manifest create --insecure raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:latest \
-        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-amd64 \
-        --amend raspberrypi.tail1d23a.ts.net:5000/go-whatsapp-web-multidevice:linux-arm64
+docker manifest create --insecure localhost:5000/go-whatsapp-web-multidevice:latest \
+        --amend localhost:5000/go-whatsapp-web-multidevice:linux-amd64 \
+        --amend localhost:5000/go-whatsapp-web-multidevice:linux-arm64
 ```
 

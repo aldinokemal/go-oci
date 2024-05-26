@@ -17,6 +17,7 @@ var imagePushCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(imagePushCmd)
+	imagePushCmd.PersistentFlags().BoolVarP(&insecure, "insecure", "i", false, "allow http  --insecure=true | -i=true")
 }
 
 func imagePushCmdRun(cmd *cobra.Command, args []string) {
@@ -41,7 +42,7 @@ func imagePushCmdRun(cmd *cobra.Command, args []string) {
 	logrus.Debugf("tmp folder: %s", tmpFolder)
 
 	defer func() {
-		logrus.Infof("removing tmp folder: %s", tmpFolder)
+		logrus.Debugf("removing tmp folder: %s", tmpFolder)
 		err := os.RemoveAll(tmpFolder)
 		if err != nil {
 			logrus.Errorf("failed to remove tmp folder: %v", err)
@@ -57,8 +58,14 @@ func imagePushCmdRun(cmd *cobra.Command, args []string) {
 		logrus.Fatalln("failed to save image to tar")
 	}
 
-	commandOrasCopy := fmt.Sprintf("oras cp --to-plain-http --from-oci-layout %s:%s %s", tmpPath, tagName, imageName)
+	var orasCopyStrBuilder strings.Builder
+	orasCopyStrBuilder.WriteString("oras cp --from-oci-layout ")
+	if insecure {
+		orasCopyStrBuilder.WriteString("--to-plain-http ")
+	}
+	orasCopyStrBuilder.WriteString(fmt.Sprintf("--from-oci-layout %s:%s %s", tmpPath, tagName, imageName))
 
+	commandOrasCopy := orasCopyStrBuilder.String()
 	logrus.Debugf("pushing image: %s", commandOrasCopy)
 
 	if err = utils.RunCommand(commandOrasCopy); err != nil {

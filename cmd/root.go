@@ -1,8 +1,12 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+)
 
 var (
+	verbose  bool
 	push     bool
 	insecure bool
 	amend    []string
@@ -16,6 +20,15 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+
+	cobra.OnInitialize(setLogLevel)
+}
+
+func setLogLevel() {
+	if verbose {
+		logrus.SetLevel(logrus.DebugLevel)
+	}
 }
 
 func Execute() error {

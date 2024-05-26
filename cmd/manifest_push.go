@@ -27,7 +27,7 @@ func manifestPushCmdRun(cmd *cobra.Command, args []string) {
 		logrus.Fatalf("failed to create tmp folder: %v", err)
 	}
 	defer func() {
-		logrus.Infof("removing tmp folder: %s", tmpFolder)
+		logrus.Debugf("removing tmp folder: %s", tmpFolder)
 		err := os.RemoveAll(tmpFolder)
 		if err != nil {
 			logrus.Errorf("failed to remove tmp folder: %v", err)
@@ -51,7 +51,7 @@ func manifestPushCmdRun(cmd *cobra.Command, args []string) {
 	orasPushManifestStrBuilder.WriteString(fmt.Sprintf("%s %s", dockerManifest, manifestPath))
 
 	orasPushManifestCmd := orasPushManifestStrBuilder.String()
-	logrus.Infof("pushing manifest: %s", orasPushManifestCmd)
+	logrus.Debugf("pushing manifest: %s", orasPushManifestCmd)
 
 	if err = utils.RunCommand(orasPushManifestCmd); err != nil {
 		logrus.Fatalf("failed to push manifest: %v", err)
