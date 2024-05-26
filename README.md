@@ -62,3 +62,7 @@ docker manifest create --insecure localhost:5000/go-whatsapp-web-multidevice:lat
         --amend localhost:5000/go-whatsapp-web-multidevice:linux-arm64
 ```
 
+### Picture
+- Uploaded multi arch image to zot registry
+![upload to zot registry](https://github.com/aldinokemal/go-oci/assets/14232125/dc5ead48-ffbe-43da-a651-83932f695cdc)
+
