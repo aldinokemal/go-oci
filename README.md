@@ -1,6 +1,9 @@
 # Push Image to OCI Registry
 
-## Requirements
+## Production Ready
+[Download Release](https://github.com/aldinokemal/go-oci/releases)
+
+## Requirements (for development)
 
 - [docker](https://docs.docker.com/get-docker/)
 - [oras](https://oras.land/)
