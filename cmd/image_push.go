@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -8,6 +9,10 @@ import (
 	"github.com/aldinokemal/go-oci/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/oci"
+	"oras.land/oras-go/v2/registry"
+	"oras.land/oras-go/v2/registry/remote"
 )
 
 var imagePushCmd = &cobra.Command{
@@ -63,19 +68,41 @@ func imagePushCmdRun(cmd *cobra.Command, args []string) {
 		logrus.Fatalln("failed to save image to tar")
 	}
 
-	var orasCopyStrBuilder strings.Builder
-	orasCopyStrBuilder.WriteString("oras cp --from-oci-layout ")
-	if insecure {
-		orasCopyStrBuilder.WriteString("--to-plain-http ")
+	// Parse the reference to extract registry, repository, and tag
+	ref, err := registry.ParseReference(imageName)
+	if err != nil {
+		logrus.Fatalf("failed to parse reference: %v", err)
 	}
-	orasCopyStrBuilder.WriteString(fmt.Sprintf("--from-oci-layout %s:%s %s", tmpPath, tagName, imageName))
 
-	commandOrasCopy := orasCopyStrBuilder.String()
-	logrus.Debugf("pushing image: %s", commandOrasCopy)
+	ctx := context.Background()
 
-	if err = utils.RunCommand(commandOrasCopy); err != nil {
+	// Create an OCI store from the saved tar file
+	store, err := oci.NewFromTar(ctx, tmpPath)
+	if err != nil {
+		logrus.Fatalf("failed to create OCI store from tar: %v", err)
+	}
+
+	// Get repository name with registry
+	regAddr := ref.Registry
+	repoName := ref.Repository
+	tagName = ref.Reference
+
+	// Create a registry client
+	repo, err := remote.NewRepository(fmt.Sprintf("%s/%s", regAddr, repoName))
+	if err != nil {
+		logrus.Fatalf("failed to create repository: %v", err)
+	}
+
+	// Configure HTTP options
+	if insecure {
+		repo.PlainHTTP = true
+	}
+
+	// Copy from OCI store to remote repository
+	desc, err := oras.Copy(ctx, store, tagName, repo, tagName, oras.DefaultCopyOptions)
+	if err != nil {
 		logrus.Fatalf("failed to push image: %v", err)
 	}
 
-	logrus.Infof("image pushed successfully")
+	logrus.Infof("image pushed successfully: %s@%s", imageName, desc.Digest)
 }

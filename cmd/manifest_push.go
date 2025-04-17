@@ -1,13 +1,20 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/aldinokemal/go-oci/utils"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"oras.land/oras-go/v2"
+	"oras.land/oras-go/v2/content/memory"
+	"oras.land/oras-go/v2/registry"
+	"oras.land/oras-go/v2/registry/remote"
 )
 
 var manifestPushCmd = &cobra.Command{
@@ -42,21 +49,61 @@ func manifestPushCmdRun(cmd *cobra.Command, args []string) {
 		logrus.Fatalf("failed to export manifest: %v", err)
 	}
 
-	// push manifest using oras
-	var orasPushManifestStrBuilder strings.Builder
-
-	orasPushManifestStrBuilder.WriteString("oras manifest push ")
-	if insecure {
-		orasPushManifestStrBuilder.WriteString("--plain-http ")
+	// Read the manifest file
+	manifestBytes, err := os.ReadFile(manifestPath)
+	if err != nil {
+		logrus.Fatalf("failed to read manifest file: %v", err)
 	}
-	orasPushManifestStrBuilder.WriteString(fmt.Sprintf("%s %s", dockerManifest, manifestPath))
 
-	orasPushManifestCmd := orasPushManifestStrBuilder.String()
-	logrus.Debugf("pushing manifest: %s", orasPushManifestCmd)
+	// Parse the manifest
+	var manifestContent interface{}
+	if err := json.Unmarshal(manifestBytes, &manifestContent); err != nil {
+		logrus.Fatalf("failed to parse manifest: %v", err)
+	}
 
-	if err = utils.RunCommand(orasPushManifestCmd); err != nil {
+	// Create a new memory store
+	store := memory.New()
+
+	// Create a context
+	ctx := context.Background()
+
+	// Create descriptor for the manifest
+	manifestDesc := ocispec.Descriptor{
+		MediaType: ocispec.MediaTypeImageManifest,
+		Digest:    "",
+		Size:      int64(len(manifestBytes)),
+		Annotations: map[string]string{
+			ocispec.AnnotationTitle: "manifest.json",
+		},
+	}
+
+	// Push to the memory store
+	if err := store.Push(ctx, manifestDesc, strings.NewReader(string(manifestBytes))); err != nil {
+		logrus.Fatalf("failed to push manifest to memory store: %v", err)
+	}
+
+	// Parse the reference
+	ref, err := registry.ParseReference(dockerManifest)
+	if err != nil {
+		logrus.Fatalf("failed to parse reference: %v", err)
+	}
+
+	// Create a repository client
+	repo, err := remote.NewRepository(fmt.Sprintf("%s/%s", ref.Registry, ref.Repository))
+	if err != nil {
+		logrus.Fatalf("failed to create repository client: %v", err)
+	}
+
+	// Set HTTP options
+	if insecure {
+		repo.PlainHTTP = true
+	}
+
+	// Copy the manifest to the remote repository
+	desc, err := oras.Copy(ctx, store, manifestDesc.Annotations[ocispec.AnnotationTitle], repo, ref.Reference, oras.DefaultCopyOptions)
+	if err != nil {
 		logrus.Fatalf("failed to push manifest: %v", err)
 	}
 
-	logrus.Infof("manifest pushed successfully")
+	logrus.Infof("manifest pushed successfully: %s@%s", dockerManifest, desc.Digest)
 }
