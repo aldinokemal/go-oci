@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/aldinokemal/go-oci/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var imagePushCmd = &cobra.Command{
@@ -21,6 +22,10 @@ func init() {
 }
 
 func imagePushCmdRun(cmd *cobra.Command, args []string) {
+	logrus.Debugf("args: %v", args)
+	if len(args) < 1 {
+		logrus.Fatalf("image name argument is required")
+	}
 	imageName := args[0]
 	// image have to contain tag
 	if !strings.Contains(imageName, ":") {

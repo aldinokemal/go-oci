@@ -1,6 +1,10 @@
 package cmd
 
 import (
+	"io"
+	"os"
+
+	"github.com/aldinokemal/go-oci/utils"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -26,9 +30,19 @@ func init() {
 }
 
 func setLogLevel() {
-	if verbose {
+	if utils.IsRunningFromGoRun() {
+		logrus.SetOutput(os.Stdout)
 		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		f, err := os.OpenFile("logs.txt", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		if err != nil {
+			logrus.SetOutput(os.Stdout)
+			logrus.Errorf("failed to open log file: %v", err)
+		} else {
+			logrus.SetOutput(io.MultiWriter(os.Stdout, f))
+		}
 	}
+	logrus.Debugf("is running from go run: %v", utils.IsRunningFromGoRun())
 }
 
 func Execute() error {
